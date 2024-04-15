@@ -1,4 +1,4 @@
-import { OPENAI_API_URL } from "@/constants"
+import { CONFIGS, OPENAI_API_URL } from "@/constnts"
 import cssText from "data-text:~style.css"
 import { motion } from "framer-motion"
 import {
@@ -11,39 +11,47 @@ import {
 import type { PlasmoCSConfig } from "plasmo"
 import { useEffect, useState } from "react"
 
+// Only run the script in a Youtube video page
 export const config: PlasmoCSConfig = {
   matches: ["https://www.youtube.com/watch*"],
   all_frames: true
 }
+
+// To use Tailwind in Content Script UI
+export const getStyle = () => {
+  const style = document.createElement("style")
+  style.textContent = cssText
+  return style
+}
+export const getShadowHostId = () => "plasmo-robibo"
 
 export interface PopupMessage {
   title: string
   message: string
 }
 
-let API_TOKEN = ""
-let SELECTED_LANGUAGE = ""
+const { OPEN_API_TOKEN_KEY, IS_TRANSLATE_KEY, SELECTED_LANGUAGE_KEY } = CONFIGS
+
+let OPENAI_API_KEY = ""
+let SELECTED_LANGUAGE = "en"
 
 chrome.storage.sync.get(
-  ["githubCopilotToken", "selectedLanguage"],
+  [OPEN_API_TOKEN_KEY, IS_TRANSLATE_KEY, SELECTED_LANGUAGE_KEY],
   (result) => {
-    API_TOKEN = result.githubCopilotToken || ""
-    SELECTED_LANGUAGE = result.selectedLanguage || ""
+    if (result[OPEN_API_TOKEN_KEY]) {
+      OPENAI_API_KEY = result[OPEN_API_TOKEN_KEY]
+    }
+    if (result[IS_TRANSLATE_KEY]) {
+      SELECTED_LANGUAGE = result[SELECTED_LANGUAGE_KEY]
+    }
   }
 )
-
-export const getStyle = () => {
-  const style = document.createElement("style")
-  style.textContent = cssText
-  return style
-}
-
-export const getShadowHostId = () => "plasmo-robibo"
 
 const FloatMenu = () => {
   const [isOpen, setIsOpen] = useState(true)
   const [isPopup, setIsPopup] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isTranslate, setIsTranslate] = useState(false)
   const [popupMessage, setPopupMessage] = useState({ title: "", message: "" })
 
   const buttonClass =
@@ -78,6 +86,40 @@ const FloatMenu = () => {
     }
   }
 
+  const handleSummarizeClick = async () => {
+    try {
+      setIsLoading(true)
+      const summary = await summarizeTranscript()
+      setIsLoading(false)
+      const message = {
+        title: "Summary",
+        message: summary
+      }
+      togglePopup(message)
+    } catch (error) {
+      console.error("Error copying transcript:", error)
+      setIsLoading(false)
+      togglePopup({ title: "Error", message: error.message })
+    }
+  }
+
+  const handleSummarizeAndTranslateClick = async () => {
+    try {
+      setIsLoading(true)
+      const summary = await summarizeTranscript(SELECTED_LANGUAGE)
+      setIsLoading(false)
+      const message = {
+        title: "Summary",
+        message: summary
+      }
+      togglePopup(message)
+    } catch (error) {
+      console.error("Error copying transcript:", error)
+      setIsLoading(false)
+      togglePopup({ title: "Error", message: error.message })
+    }
+  }
+
   return (
     <div
       className={`fixed bottom-16 right-12 flex min-h-[40px] min-w-[40px] flex-col items-center justify-center rounded-2xl bg-slate-100 p-4 text-2xl shadow-md transition duration-300 ease-in-out ${
@@ -100,24 +142,31 @@ const FloatMenu = () => {
         {isOpen ? (
           <>
             <button
+              aria-label="Toggle Menu"
+              title="Toggle Menu"
               onClick={toggleMenu}
               className={buttonClass}
               disabled={isLoading}>
               <ChevronRightIcon />
             </button>
+            <button
+              title="Summarize Transcript"
+              aria-label="Summarize Transcript"
+              onClick={handleSummarizeClick}
+              className={buttonClass}
+              disabled={isLoading}>
+              <NotebookPenIcon />
+            </button>
             {/* <button */}
-            {/*   onClick={toggleMenu} */}
-            {/*   className={buttonClass} */}
-            {/*   disabled={isLoading}> */}
-            {/*   <NotebookPenIcon /> */}
-            {/* </button> */}
-            {/* <button */}
-            {/*   onClick={toggleMenu} */}
+            {/*   aria-label="Summarize Transcript with Translation" */}
+            {/*   onClick={summarizeTranscript} */}
             {/*   className={buttonClass} */}
             {/*   disabled={isLoading}> */}
             {/*   <GlobeIcon /> */}
             {/* </button> */}
             <button
+              title="Copy Transcript to Clipboard"
+              aria-label="Copy Transcript to Clipboard"
               onClick={handleCopyClick}
               className={buttonClass}
               disabled={isLoading}>
@@ -240,18 +289,24 @@ async function summarizeTranscript(language = "en") {
   try {
     const transcriptText = await getTranscript()
 
-    if (!API_TOKEN) {
+    if (!OPENAI_API_KEY) {
       throw new Error("API token not found.")
     }
 
     const response = await fetch(`${OPENAI_API_URL}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${API_TOKEN}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        messages: []
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "user",
+            content: `Summarize the following transcript in ${language}: ${transcriptText}`
+          }
+        ]
       })
     })
 
@@ -261,36 +316,9 @@ async function summarizeTranscript(language = "en") {
 
     const data = await response.json()
     const summary = data.choices[0].message.content.trim()
-    const summaryTitle = summary.split("\n")[0].replace(/#/g, "").trim()
-    const summaryText = summary.split("\n").slice(1).join("\n").trim()
-    const summaryHtml = await markdownToHtml(summaryText)
-
-    return { title: summaryTitle, message: summaryHtml }
+    console.log("[Summary]", summary)
+    return summary
   } catch (error) {
     console.error("Error summarizing transcript:", error)
-  }
-}
-
-async function markdownToHtml(markdown) {
-  try {
-    const response = await fetch("https://api.github.com/markdown", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        text: markdown
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const html = await response.text()
-    return html
-  } catch (error) {
-    console.error("Error converting markdown to HTML:", error)
-    return markdown // return the original markdown text if conversion fails
   }
 }
