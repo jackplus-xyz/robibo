@@ -7,8 +7,6 @@
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
 
-# Robibo
-
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -16,16 +14,29 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-- [Robibo](#robibo)
-  - [Introduction](#introduction)
-    - [Features](#features)
-    - [Built With](#built-with)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-  - [Usage](#usage)
-  - [License](#license)
-  - [Contact](#contact)
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/jackplus-xyz/robibo">
+    <img src="images/logo.png" alt="Logo" width="480">
+  </a>
+
+  <p align="center">
+  A chrome extension for scraping Youtube video transcript and copying/summarizing it.
+  </p>
+</div>
+
+---
+
+- [Introduction](#introduction)
+  - [Features](#features)
+  - [Built With](#built-with)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [License](#license)
+- [Contact](#contact)
 
 ## Introduction
 
