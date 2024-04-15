@@ -33,6 +33,7 @@ const LANGUAGE_OPTIONS = [
 
 const OPEN_API_TOKEN_KEY = "openaiApiToken"
 const SELECTED_LANGUAGE_KEY = "selectedLanguage"
+const IS_TRANSLATE_KEY = "isTranslate"
 
 function OptionsIndex() {
   const [token, setToken] = useState("")
@@ -46,8 +47,13 @@ function OptionsIndex() {
     chrome.storage.sync.get(
       [OPEN_API_TOKEN_KEY, SELECTED_LANGUAGE_KEY],
       (result) => {
+        console.log("[OptionsIndex] result", result)
         if (result[OPEN_API_TOKEN_KEY]) {
           setToken(result[OPEN_API_TOKEN_KEY])
+        }
+
+        if (result[IS_TRANSLATE_KEY]) {
+          setIsTranslate(result[IS_TRANSLATE_KEY])
         }
 
         if (result[SELECTED_LANGUAGE_KEY]) {
@@ -78,10 +84,20 @@ function OptionsIndex() {
     }
   }
 
-  const saveSettings = (newToken = token, newLanguage = language) => {
+  const saveSettings = (
+    newToken = token,
+    newIsTranslate = isTranslate,
+    newLanguage = language
+  ) => {
+    console.log("[OptionsIndex] saveSettings")
+    console.log("[OptionsIndex] token", newToken)
+    console.log("[OptionsIndex] isTranslate", newIsTranslate)
+    console.log("[OptionsIndex] language", newLanguage)
+
     chrome.storage.sync.set(
       {
         [OPEN_API_TOKEN_KEY]: newToken,
+        [IS_TRANSLATE_KEY]: newIsTranslate,
         [SELECTED_LANGUAGE_KEY]: newLanguage
       },
       () => {
@@ -94,7 +110,7 @@ function OptionsIndex() {
   }
 
   const resetSettings = () => {
-    saveSettings("", "en")
+    saveSettings("", false, "en")
     setShowToken(false)
     setPlaceholder("Enter token")
   }
@@ -116,6 +132,11 @@ function OptionsIndex() {
         <CardContent>
           <div className="mt-4 text-base font-bold">Token</div>
           <div className="text-sm">Your OpenAI API token</div>
+          <a
+            href="https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key"
+            className="text-sm text-slate-400 hover:text-slate-500">
+            Where do I find my OpenAI API Key? | OpenAI Help Center
+          </a>
           <div className="my-4 flex items-center">
             <Input
               onChange={handleTokenChange}
@@ -137,10 +158,13 @@ function OptionsIndex() {
             <span className="flex items-center justify-center text-sm">
               <Checkbox
                 checked={isTranslate}
-                onCheckedChange={(checked) => setIsTranslate(checked === true)}
+                onCheckedChange={(checked) => {
+                  setIsTranslate(checked === true)
+                  saveSettings(token, checked === true, language)
+                }}
                 className="mr-2"
               />
-              Translate the summary(by default, it will be in English.)
+              Translate the summary. By default, the summary is not translated.
             </span>
             {isTranslate && (
               <div className="flex flex-col space-y-2">
