@@ -324,7 +324,16 @@ async function summarizeTranscript(language = "en") {
         messages: [
           {
             role: "user",
-            content: `Summarize the following transcript in ${language}: ${transcriptText}`
+            content:
+              "Please provide a summary of the transcript below. The summary should be concise, no more than 200 words, and written in the specified language."
+          },
+          {
+            role: "system",
+            content: `Language for summary: ${language}`
+          },
+          {
+            role: "system",
+            content: `Transcript text: ${transcriptText}`
           }
         ]
       })
