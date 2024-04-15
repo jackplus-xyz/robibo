@@ -1,4 +1,4 @@
-import { CONFIGS, OPENAI_API_URL } from "@/constnts"
+import { CONFIGS, OPENAI_API_URL } from "@/constants"
 import cssText from "data-text:~style.css"
 import { motion } from "framer-motion"
 import {
@@ -33,6 +33,7 @@ export interface PopupMessage {
 const { OPEN_API_TOKEN_KEY, IS_TRANSLATE_KEY, SELECTED_LANGUAGE_KEY } = CONFIGS
 
 let OPENAI_API_KEY = ""
+let IS_TRANSLATE = false
 let SELECTED_LANGUAGE = "en"
 
 chrome.storage.sync.get(
@@ -42,6 +43,7 @@ chrome.storage.sync.get(
       OPENAI_API_KEY = result[OPEN_API_TOKEN_KEY]
     }
     if (result[IS_TRANSLATE_KEY]) {
+      IS_TRANSLATE = result[IS_TRANSLATE_KEY]
       SELECTED_LANGUAGE = result[SELECTED_LANGUAGE_KEY]
     }
   }
@@ -51,7 +53,6 @@ const FloatMenu = () => {
   const [isOpen, setIsOpen] = useState(true)
   const [isPopup, setIsPopup] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isTranslate, setIsTranslate] = useState(false)
   const [popupMessage, setPopupMessage] = useState({ title: "", message: "" })
 
   const buttonClass =
@@ -149,21 +150,29 @@ const FloatMenu = () => {
               disabled={isLoading}>
               <ChevronRightIcon />
             </button>
-            <button
-              title="Summarize Transcript"
-              aria-label="Summarize Transcript"
-              onClick={handleSummarizeClick}
-              className={buttonClass}
-              disabled={isLoading}>
-              <NotebookPenIcon />
-            </button>
-            {/* <button */}
-            {/*   aria-label="Summarize Transcript with Translation" */}
-            {/*   onClick={summarizeTranscript} */}
-            {/*   className={buttonClass} */}
-            {/*   disabled={isLoading}> */}
-            {/*   <GlobeIcon /> */}
-            {/* </button> */}
+            {OPENAI_API_KEY && (
+              <>
+                <button
+                  title="Summarize Transcript"
+                  aria-label="Summarize Transcript"
+                  onClick={handleSummarizeClick}
+                  className={buttonClass}
+                  disabled={isLoading}>
+                  <NotebookPenIcon />
+                </button>
+
+                {IS_TRANSLATE && (
+                  <button
+                    title="Summarize Transcript and Translate"
+                    aria-label="Summarize Transcript and Translate"
+                    onClick={handleSummarizeAndTranslateClick}
+                    className={buttonClass}
+                    disabled={isLoading}>
+                    <GlobeIcon />
+                  </button>
+                )}
+              </>
+            )}
             <button
               title="Copy Transcript to Clipboard"
               aria-label="Copy Transcript to Clipboard"
