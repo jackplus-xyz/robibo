@@ -6,7 +6,8 @@ import {
   ChevronRightIcon,
   CopyIcon,
   GlobeIcon,
-  NotebookPenIcon
+  NotebookPenIcon,
+  XIcon
 } from "lucide-react"
 import type { PlasmoCSConfig } from "plasmo"
 import { useEffect, useState } from "react"
@@ -66,12 +67,14 @@ const FloatMenu = () => {
 
   const toggleMenu = () => setIsOpen(!isOpen)
 
-  const togglePopup = (message: PopupMessage) => {
+  const togglePopup = (message: PopupMessage, timeout = null) => {
     setPopupMessage(message)
     setIsPopup(true)
-    setTimeout(() => {
-      setIsPopup(false)
-    }, 3000)
+    if (timeout) {
+      setTimeout(() => {
+        setIsPopup(false)
+      }, timeout)
+    }
   }
 
   const handleCopyClick = async () => {
@@ -79,7 +82,7 @@ const FloatMenu = () => {
       setIsLoading(true)
       const message = await copyTranscriptToClipboard()
       setIsLoading(false)
-      togglePopup(message)
+      togglePopup(message, 3000)
     } catch (error) {
       console.error("Error copying transcript:", error)
       setIsLoading(false)
@@ -98,7 +101,7 @@ const FloatMenu = () => {
       }
       togglePopup(message)
     } catch (error) {
-      console.error("Error copying transcript:", error)
+      console.error("Error summarizing transcript:", error)
       setIsLoading(false)
       togglePopup({ title: "Error", message: error.message })
     }
@@ -115,7 +118,7 @@ const FloatMenu = () => {
       }
       togglePopup(message)
     } catch (error) {
-      console.error("Error copying transcript:", error)
+      console.error("Error summarizing and translating transcript:", error)
       setIsLoading(false)
       togglePopup({ title: "Error", message: error.message })
     }
@@ -134,11 +137,19 @@ const FloatMenu = () => {
           animate={isPopup ? "visible" : "fadeout"}
           variants={popupVariants}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="absolute bottom-full right-0 mb-4 flex min-h-[100px]  min-w-[200px] flex-col items-start justify-center rounded-2xl bg-slate-100 p-8 text-2xl shadow-lg">
-          <div className="text-2xl font-bold">{popupMessage.title}</div>
+          className="absolute bottom-full right-0 mb-4 flex min-h-[100px] w-auto min-w-[200px] max-w-[90%] flex-col items-start justify-center rounded-2xl bg-slate-100 p-8 text-2xl shadow-lg">
+          <div className="flex w-full items-center justify-between text-2xl font-bold">
+            {popupMessage.title}
+            <button
+              onClick={() => setIsPopup(false)}
+              className="ml-2 text-slate-400 hover:text-slate-600">
+              <XIcon className="h-6 w-6" />
+            </button>
+          </div>
           <div className="text-xl">{popupMessage.message}</div>
         </motion.div>
       )}
+
       <div className="flex items-center justify-center space-x-4">
         {isOpen ? (
           <>
@@ -325,7 +336,6 @@ async function summarizeTranscript(language = "en") {
 
     const data = await response.json()
     const summary = data.choices[0].message.content.trim()
-    console.log("[Summary]", summary)
     return summary
   } catch (error) {
     console.error("Error summarizing transcript:", error)
