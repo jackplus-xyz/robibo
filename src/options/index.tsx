@@ -19,13 +19,11 @@ import {
 
 import "@/style.css"
 
-import { LANGUAGE_OPTIONS } from "@/constants"
+import { CONFIGS, LANGUAGE_OPTIONS } from "@/constants"
 import { BotIcon, EyeIcon, EyeOffIcon } from "lucide-react"
 import { useEffect, useState, type ChangeEvent } from "react"
 
-const OPEN_API_TOKEN_KEY = "openaiApiToken"
-const SELECTED_LANGUAGE_KEY = "selectedLanguage"
-const IS_TRANSLATE_KEY = "isTranslate"
+const { OPEN_API_TOKEN_KEY, IS_TRANSLATE_KEY, SELECTED_LANGUAGE_KEY } = CONFIGS
 
 function OptionsIndex() {
   const [token, setToken] = useState("")
