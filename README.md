@@ -33,7 +33,7 @@ I watch a lot Youtube videos everyday, especially reviews of food, technology an
 
 ### Features
 
-![Demo](public/summarize.png)
+![Demo](images/summarize.png)
 
 Robibo is a extension that help to summarize and copy transcript from a Youtube video.
 
