@@ -19,17 +19,9 @@ import {
 
 import "@/style.css"
 
-import { Separator } from "@/components/ui/separator"
+import { LANGUAGE_OPTIONS } from "@/constants"
 import { BotIcon, EyeIcon, EyeOffIcon } from "lucide-react"
 import { useEffect, useState, type ChangeEvent } from "react"
-
-const LANGUAGE_OPTIONS = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "fr", label: "French" },
-  { value: "de", label: "German" },
-  { value: "zh-tw", label: "Traditional Chinese" }
-]
 
 const OPEN_API_TOKEN_KEY = "openaiApiToken"
 const SELECTED_LANGUAGE_KEY = "selectedLanguage"
@@ -45,9 +37,8 @@ function OptionsIndex() {
 
   useEffect(() => {
     chrome.storage.sync.get(
-      [OPEN_API_TOKEN_KEY, SELECTED_LANGUAGE_KEY],
+      [OPEN_API_TOKEN_KEY, IS_TRANSLATE_KEY, SELECTED_LANGUAGE_KEY],
       (result) => {
-        console.log("[OptionsIndex] result", result)
         if (result[OPEN_API_TOKEN_KEY]) {
           setToken(result[OPEN_API_TOKEN_KEY])
         }
@@ -89,11 +80,6 @@ function OptionsIndex() {
     newIsTranslate = isTranslate,
     newLanguage = language
   ) => {
-    console.log("[OptionsIndex] saveSettings")
-    console.log("[OptionsIndex] token", newToken)
-    console.log("[OptionsIndex] isTranslate", newIsTranslate)
-    console.log("[OptionsIndex] language", newLanguage)
-
     chrome.storage.sync.set(
       {
         [OPEN_API_TOKEN_KEY]: newToken,
@@ -131,11 +117,11 @@ function OptionsIndex() {
         </CardHeader>
         <CardContent>
           <div className="mt-4 text-base font-bold">Token</div>
-          <div className="text-sm">Your OpenAI API token</div>
+          <div className="text-sm">Your OpenAI API token.</div>
           <a
             href="https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key"
             className="text-sm text-slate-400 hover:text-slate-500">
-            Where do I find my OpenAI API Key? | OpenAI Help Center
+            Where do I find my OpenAI API Key?
           </a>
           <div className="my-4 flex items-center">
             <Input
